@@ -11,38 +11,70 @@ describe('BudgetLimitStrategy (Feature 1)', () => {
     vi.restoreAllMocks();
   });
 
-  // Example of how to write and mock in your tests:
-  //
-  // it('should correctly identify categories that are over budget', async () => {
-  //   // 1. Mock the BudgetService asynchronously
-  //   const mockBudgets = { Food: 100, Rent: 1000 };
-  //   const spy = vi.spyOn(BudgetService, 'getCategoryBudgets').mockResolvedValue(mockBudgets);
-  //
-  //   // 2. Set up test transactions
-  //   const testTransactions: Transaction[] = [
-  //     { id: '1', date: '2026-05-01', amount: -150.00, category: 'Food', description: 'Grocery', status: 'completed' }, // Over budget
-  //     { id: '2', date: '2026-05-02', amount: -900.00, category: 'Rent', description: 'Apartment', status: 'completed' }, // Under budget
-  //   ];
-  //
-  //   // 3. Execute
-  //   const result = await strategy.execute(testTransactions);
-  //
-  //   // 4. Assert
-  //   expect(spy).toHaveBeenCalled();
-  //   expect(result).toContain('Food');
-  //   expect(result).toContain('OVER BUDGET'); // or whatever formatting you choose
-  //   expect(result).not.toContain('Rent over budget');
-  // });
 
-  it.todo('should group expenses correctly by category and sum them');
+  it('should group expenses correctly by category and sum them', async () => {
+    const mockBudgets = {Food: 200};
+    vi.spyOn(BudgetService, 'getCategoryBudgets').mockResolvedValue(mockBudgets);
 
-  it.todo('should calculate absolute overage amounts and percentage exceeded');
+    const testTransactions: Transaction[] = [
+      { id: '1', date: '2026-05-01', amount: -100.00, category: 'Food', description: 'Groceries', status: 'completed' },
+      { id: '2', date: '2026-05-02', amount: -150.00, category: 'Food', description: 'Restaurant', status: 'completed' },
+      { id: '3', date: '2026-05-03', amount: 50.00, category: 'Food', description: 'Refund', status: 'completed' }, 
+    ];
 
-  it.todo(
-    'should list the specific transactions contributing to categories that are over budget',
-  );
+    const result = await strategy.execute(testTransactions);
 
-  it.todo('should handle scenarios where no categories are over budget');
+    expect(result).toContain('Category: Food');
+    expect(result).toContain('$250.00');
+  });
 
-  it.todo('should handle empty transaction list gracefully');
+  it('should calculate absolute overage amounts and percentage exceeded', async () => {
+    const mockBudgets = {Entertainment: 100};
+    vi.spyOn(BudgetService, 'getCategoryBudgets').mockResolvedValue(mockBudgets);
+
+    const testTransactions: Transaction[] = [
+      { id: '1', date: '2026-05-01', amount: -150.00, category: 'Entertainment', description: 'Concert', status: 'completed'},
+    ];
+    const result = await strategy.execute(testTransactions);
+
+    expect(result).toContain('Budget Limit:     $100.00');
+    expect(result).toContain('Actual Spending:  $150.00');
+    expect(result).toContain('Overage Amount:   $50.00 (+50.0%)');
+  });
+
+  it('should list the specific transactions contributing to categories that are over budget', async () => {
+    const mockBudgets = { Tech: 50 };
+    vi.spyOn(BudgetService, 'getCategoryBudgets').mockResolvedValue(mockBudgets);
+
+    const testTransactions: Transaction[] = [
+      { id: 't1', date: '2026-05-01', amount: -60.00, category: 'Tech', description: 'Software License', status: 'completed' },
+    ];
+
+    const result = await strategy.execute(testTransactions);
+
+    expect(result).toContain('Transactions (1):');
+    expect(result).toContain('- [2026-05-01] ID:t1 | Software License:$60.00');
+  });
+
+  it('should handle scenarios where no categories are over budget', async () => {
+    const mockBudgets = { Travel: 500 };
+    vi.spyOn(BudgetService, 'getCategoryBudgets').mockResolvedValue(mockBudgets);
+
+    const testTransactions: Transaction[] = [
+      { id: '1', date: '2026-05-01', amount: -200.00, category: 'Travel', description: 'Flight Deposit', status: 'completed' },
+    ];
+
+    const result = await strategy.execute(testTransactions);
+
+    expect(result).toBe('=== BUDGET AUDIT REPORT ===\nStatus: PASSED\nNo budget overages detected.');
+  });
+
+  it('should handle empty transaction list gracefully', async () => {
+    vi.spyOn(BudgetService, 'getCategoryBudgets').mockResolvedValue({ Utilities: 100 });
+
+    const result = await strategy.execute([]);
+
+    expect(result).toContain('Status: PASSED');
+    expect(result).toContain('No budget overages detected.');
+  });
 });
