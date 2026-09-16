@@ -23,7 +23,7 @@ export class AnomalyDetectionStrategy implements AuditStrategy {
      const duplicatesMap = new Map<string, Transaction[]>();
      for (const tx of transactions){
       //Create key to hold each transaction date, category, description, and amt
-      const key = '${tx.date}_${tx.category}_${tx.description}_${tx.amount}';
+      const key = `${tx.date}_${tx.category}_${tx.description}_${tx.amount}`;
       //holds the group
       const group = duplicatesMap.get(key) || [];
       //holds each transaction
@@ -52,29 +52,29 @@ export class AnomalyDetectionStrategy implements AuditStrategy {
      const anomalyPercent = totalTransactions > 0 ? ((totalAnomaliesCount / totalTransactions) * 100).toFixed(2) : '0.00';
 
     // 6. Format and return a text-based audit report of anomalies, duplicate sets, and totals.
-    let textReport = '============\n' +
-    ' Report of Anomalies and Duplicates\n' +
-    '--------------\n' +
-    'Outlier Transactions: ${outliers.length}\n';
+    let textReport = `============\n` +
+    ` Report of Anomalies and Duplicates\n` +
+    `--------------\n` +
+    `Outlier Transactions: ${outliers.length}\n`;
      outliers.forEach((tx) => {
-      textReport += 'ID: ${tx.id}, Amount: ${tx.amount}, Date: ${tx.date}\n';
+      textReport += `ID: ${tx.id}, Amount: ${tx.amount}, Date: ${tx.date}\n`;
      });
-     textReport += '--------------\n' +
-    'Dplicate Transactions: ${duplicateTransactions.length} from ${duplicateSets.length} sets';
+     textReport += `--------------\n` +
+    `Duplicate Transactions: ${duplicateTransactions.length} from ${duplicateSets.length} sets`;
      duplicateSets.forEach((set, index) => {
-      textReport += 'Set #${index +1}:\n';
+      textReport += `Set #${index +1}:\n`;
       set.forEach((tx) => {
-        textReport += '   - ID: ${tx.id}, ${tx.date} | ${tx.amount}\n}';
+        textReport += `   - ID: ${tx.id}, ${tx.date} | ${tx.amount}\n`;
       })
      })
-     textReport +='--------------\n' +
-    'Flagged Transactions: ';
+     textReport += `--------------\n` +
+    `Flagged Transactions: `;
     statusFlagged.forEach((tx) => {
-      textReport += '    - ID: ${tx.id}, Status: ${tx.status}, Amount: ${tx.amount}\n';
+      textReport += `    - ID: ${tx.id}, Status: ${tx.status}, Amount: ${tx.amount}\n`;
     });
-    textReport += '--------------\n' +
-    'Total Anomalous Transactions: ${totalAnomalousCount}\n' + 
-    'Percentage of Anomalous Transactions: ${anomalyPercent}%\n'; 
+    textReport += `--------------\n` +
+    `Total Anomalous Transactions: ${totalAnomaliesCount}\n` + 
+    `Percentage of Anomalous Transactions: ${anomalyPercent}%\n`; 
 
     return textReport;
   }
